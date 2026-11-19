@@ -45,6 +45,19 @@ def render_listings_page() -> None:
 
         if not listings:
             st.info("No tutoring listings found matching your search criteria. Try adjusting the filters or be the first to offer tutoring!")
+            from database import get_db_connection
+            try:
+                with get_db_connection() as conn:
+                    total_listings = conn.execute("SELECT COUNT(id) as count FROM listings").fetchone()["count"]
+                if total_listings == 0:
+                    st.warning("⚠️ No tutors or courses have been listed in the database yet.")
+                    if st.button("✨ Load Sample Tutors & Listings Now", type="primary", use_container_width=True):
+                        from seed_data import seed_sample_data
+                        seed_sample_data(reset_existing=False)
+                        st.success("Sample campus tutors and listings loaded successfully!")
+                        st.rerun()
+            except Exception:
+                pass
         else:
             st.markdown(f"**Showing {len(listings)} available tutor listings:**")
             
