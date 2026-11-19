@@ -84,8 +84,33 @@ def render_login_register_page() -> None:
         st.markdown("##### Fast Demo Profiles for Project Evaluation")
         st.caption("Click any persona below to immediately log in and explore features with realistic pre-populated data:")
         
-        demo_cols = st.columns(3)
+        demo_cols = st.columns(4)
         with demo_cols[0]:
+            st.markdown(
+                """
+                <div style="background: white; border: 2px solid #3b82f6; border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+                    <strong style="color: #1e40af;">NITHISH.G</strong><br/>
+                    <small style="color: #64748b;">CSE • 3rd Year<br/>Active Tutor & Developer</small>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            if st.button("Log In as NITHISH.G", key="demo_nithish", use_container_width=True, type="primary"):
+                # Try official college email, fallback to gmail and passwords
+                u = None
+                for email_candidate in ["nithish.cse@sece.ac.in", "nithishg333@gmail.com"]:
+                    for pwd in ["student123", "password123"]:
+                        success, msg, candidate_user = authenticate_user(email_candidate, pwd)
+                        if success and candidate_user:
+                            u = candidate_user
+                            break
+                    if u:
+                        break
+                if u:
+                    login_user(u)
+                    st.rerun()
+
+        with demo_cols[1]:
             st.markdown(
                 """
                 <div style="background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; margin-bottom: 8px;">
@@ -95,13 +120,13 @@ def render_login_register_page() -> None:
                 """,
                 unsafe_allow_html=True,
             )
-            if st.button("Log In as Kavya (Tutor)", key="demo_kavya", use_container_width=True):
+            if st.button("Log In as Kavya", key="demo_kavya", use_container_width=True):
                 success, msg, u = authenticate_user("kavya.cse@sece.ac.in", "student123")
                 if success and u:
                     login_user(u)
                     st.rerun()
 
-        with demo_cols[1]:
+        with demo_cols[2]:
             st.markdown(
                 """
                 <div style="background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; margin-bottom: 8px;">
@@ -111,23 +136,23 @@ def render_login_register_page() -> None:
                 """,
                 unsafe_allow_html=True,
             )
-            if st.button("Log In as Rahul (Learner)", key="demo_rahul", use_container_width=True):
+            if st.button("Log In as Rahul", key="demo_rahul", use_container_width=True):
                 success, msg, u = authenticate_user("rahul.eee@sece.ac.in", "student123")
                 if success and u:
                     login_user(u)
                     st.rerun()
 
-        with demo_cols[2]:
+        with demo_cols[3]:
             st.markdown(
                 """
                 <div style="background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; margin-bottom: 8px;">
                     <strong>Dean of Academics</strong><br/>
-                    <small style="color: #64748b;">Admin & Faculty<br/>College Analytics Access</small>
+                    <small style="color: #64748b;">Admin & Faculty<br/>College Analytics</small>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
-            if st.button("Log In as College Admin", key="demo_admin", use_container_width=True):
+            if st.button("Log In as Admin", key="demo_admin", use_container_width=True):
                 success, msg, u = authenticate_user("admin@sece.ac.in", "admin123")
                 if success and u:
                     login_user(u)

@@ -35,6 +35,18 @@ def render_listings_page() -> None:
         with col_p:
             price_filter = st.selectbox("Pricing", ["All", "Free Only", "Paid Only"])
 
+        # Ensure database has active listings; if zero, automatically seed and refresh
+        from database import get_db_connection
+        try:
+            with get_db_connection() as conn:
+                total_in_db = conn.execute("SELECT COUNT(id) as count FROM listings").fetchone()["count"]
+            if total_in_db == 0:
+                from seed_data import seed_sample_data
+                seed_sample_data(reset_existing=False)
+                st.rerun()
+        except Exception:
+            pass
+
         # Fetch matching listings (exclude user's own from browse if logged in)
         listings = search_listings(
             subject_query=search_query,
@@ -43,21 +55,18 @@ def render_listings_page() -> None:
             exclude_user_id=user["id"] if user else None,
         )
 
+        # Fallback: if all listings in the system belong to the current user, show them rather than an empty page
+        if not listings and not search_query and mode_filter == "All" and price_filter == "All":
+            listings = search_listings(
+                subject_query=search_query,
+                mode_filter=mode_filter,
+                price_filter=price_filter,
+            )
+
         if not listings:
-            st.info("No tutoring listings found matching your search criteria. Try adjusting the filters or be the first to offer tutoring!")
-            from database import get_db_connection
-            try:
-                with get_db_connection() as conn:
-                    total_listings = conn.execute("SELECT COUNT(id) as count FROM listings").fetchone()["count"]
-                if total_listings == 0:
-                    st.warning("⚠️ No tutors or courses have been listed in the database yet.")
-                    if st.button("✨ Load Sample Tutors & Listings Now", type="primary", use_container_width=True):
-                        from seed_data import seed_sample_data
-                        seed_sample_data(reset_existing=False)
-                        st.success("Sample campus tutors and listings loaded successfully!")
-                        st.rerun()
-            except Exception:
-                pass
+            st.info("No tutoring listings found matching your search criteria.")
+            if search_query or mode_filter != "All" or price_filter != "All":
+                st.caption("Tip: Try resetting search keyword or filter settings to 'All'.")
         else:
             st.markdown(f"**Showing {len(listings)} available tutor listings:**")
             

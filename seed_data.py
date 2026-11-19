@@ -53,6 +53,24 @@ def seed_sample_data(reset_existing: bool = False) -> None:
     # 2. Register or find sample students
     sample_students = [
         {
+            "name": "NITHISH.G",
+            "email": "nithish.cse@sece.ac.in",
+            "password": "student123",
+            "department": "Computer Science & Engineering (CSE)",
+            "year_of_study": "3rd Year (Junior)",
+            "bio": "Full-stack developer and peer tutor at Sri Eshwar. Specializing in Python, Streamlit, Web Applications, and Cloud Deployment architectures.",
+            "learning_interests": "Cloud Architecture, Distributed Systems, AI Engineering, Full Stack Web Development",
+        },
+        {
+            "name": "NITHISH.G",
+            "email": "nithishg333@gmail.com",
+            "password": "student123",
+            "department": "Computer Science & Engineering (CSE)",
+            "year_of_study": "3rd Year (Junior)",
+            "bio": "Full-stack developer and peer tutor at Sri Eshwar. Specializing in Python, Streamlit, Web Applications, and Cloud Deployment architectures.",
+            "learning_interests": "Cloud Architecture, Distributed Systems, AI Engineering, Full Stack Web Development",
+        },
+        {
             "name": "Kavya Sundaram",
             "email": "kavya.cse@sece.ac.in",
             "password": "student123",
@@ -137,6 +155,12 @@ def seed_sample_data(reset_existing: bool = False) -> None:
 
     user_ids = {}
     with get_db_connection() as conn:
+        # Check any existing Nithish account first to bind to user_ids
+        nithish_rows = conn.execute("SELECT id, email, name FROM users WHERE LOWER(name) LIKE '%nithish%' OR LOWER(email) LIKE '%nithish%'").fetchall()
+        for nr in nithish_rows:
+            user_ids["nithish.cse@sece.ac.in"] = nr["id"]
+            user_ids["nithishg333@gmail.com"] = nr["id"]
+
         for st in sample_students:
             cur = conn.execute("SELECT id FROM users WHERE email = ?", (st["email"].strip().lower(),))
             row = cur.fetchone()
@@ -162,6 +186,26 @@ def seed_sample_data(reset_existing: bool = False) -> None:
 
     if listing_count == 0 or reset_existing:
         listings_data = [
+            # Nithish G's Listings
+            {
+                "email": "nithish.cse@sece.ac.in",
+                "subject": "Full-Stack Web Development & Streamlit",
+                "description": "Building interactive Python web applications, Streamlit dashboards, REST APIs, and modern frontend interfaces.",
+                "is_paid": True,
+                "price": 150.0,
+                "modes": ["ONLINE", "ON_CAMPUS"],
+                "availability": "Mon, Wed, Fri: 5:00 PM - 7:00 PM",
+            },
+            {
+                "email": "nithish.cse@sece.ac.in",
+                "subject": "Python Problem Solving & Algorithms",
+                "description": "Hands-on Python scripting, object-oriented concepts, algorithm optimization, and interview problem solving.",
+                "is_paid": False,
+                "price": 0.0,
+                "modes": ["ONLINE", "ON_CAMPUS", "ASYNCHRONOUS"],
+                "availability": "Tue, Thu: 4:30 PM - 6:30 PM",
+            },
+            # Peer Tutor Listings
             {
                 "email": "kavya.cse@sece.ac.in",
                 "subject": "Data Structures & Algorithms",
@@ -297,6 +341,7 @@ def seed_sample_data(reset_existing: bool = False) -> None:
 
     if req_count == 0 or reset_existing:
         today = datetime.now().date()
+        nithish_id = user_ids.get("nithish.cse@sece.ac.in") or user_ids.get("nithishg333@gmail.com")
         kavya_id = user_ids.get("kavya.cse@sece.ac.in")
         arun_id = user_ids.get("arun.aids@sece.ac.in")
         dinesh_id = user_ids.get("dinesh.it@sece.ac.in")
@@ -307,11 +352,89 @@ def seed_sample_data(reset_existing: bool = False) -> None:
         ananya_id = user_ids.get("ananya.civil@sece.ac.in")
         sneha_id = user_ids.get("sneha.mech@sece.ac.in")
 
-        with get_db_connection() as conn:
-            # Helper to get listing ID by subject and tutor
-            def get_lid(tutor_id, subject):
-                row = conn.execute("SELECT id FROM listings WHERE tutor_id = ? AND subject = ?", (tutor_id, subject)).fetchone()
-                return row["id"] if row else None
+        # Session 0A: Completed session where Nithish tutored Rahul (EEE)
+        if nithish_id and rahul_id:
+            date0a = (today - timedelta(days=5)).strftime("%Y-%m-%d")
+            s, m, req0a = create_session_request(
+                listing_id=None,
+                learner_id=rahul_id,
+                tutor_id=nithish_id,
+                mode="ONLINE",
+                session_date=date0a,
+                session_time="18:00",
+                notes="Need guidance building a Streamlit dashboard with SQLite for my mini-project.",
+                price=150.0,
+            )
+            if s and req0a:
+                update_request_status(
+                    req0a, nithish_id, STATUS_ACCEPTED,
+                    tutor_note="Accepted! We will build the UI step-by-step.",
+                    meet_link="[DEMO MODE] https://meet.google.com/sec-nit-dev",
+                    is_demo_link=True,
+                )
+                update_request_status(req0a, nithish_id, STATUS_COMPLETED)
+                create_review(req0a, rahul_id, nithish_id, 5, "Nithish is an amazing tutor! Cleared all my frontend and database queries patiently.")
+
+        # Session 0B: Completed session where Nithish tutored Sneha (MECH)
+        if nithish_id and sneha_id:
+            date0b = (today - timedelta(days=3)).strftime("%Y-%m-%d")
+            s, m, req0b = create_session_request(
+                listing_id=None,
+                learner_id=sneha_id,
+                tutor_id=nithish_id,
+                mode="ON_CAMPUS",
+                session_date=date0b,
+                session_time="16:30",
+                meeting_spot="Central Library - 2nd Floor Discussion Zone",
+                notes="Python data processing and graphing with Matplotlib for mechanical data.",
+                price=0.0,
+            )
+            if s and req0b:
+                update_request_status(req0b, nithish_id, STATUS_ACCEPTED, tutor_note="Confirmed! Bring your dataset.")
+                update_request_status(req0b, nithish_id, STATUS_COMPLETED)
+                create_review(req0b, sneha_id, nithish_id, 5, "Super clear explanations and very patient with beginners!")
+
+        # Session 0C: Upcoming session where Dinesh booked Nithish
+        if nithish_id and dinesh_id:
+            date0c = (today + timedelta(days=2)).strftime("%Y-%m-%d")
+            s, m, req0c = create_session_request(
+                listing_id=None,
+                learner_id=dinesh_id,
+                tutor_id=nithish_id,
+                mode="ONLINE",
+                session_date=date0c,
+                session_time="17:00",
+                notes="Deploying web applications to cloud servers and handling CORS.",
+                price=150.0,
+            )
+            if s and req0c:
+                update_request_status(
+                    req0c, nithish_id, STATUS_ACCEPTED,
+                    tutor_note="Accepted! Looking forward to our coding session.",
+                    meet_link="[DEMO MODE] https://meet.google.com/sec-nit-cld",
+                    is_demo_link=True,
+                )
+
+        # Session 0D: Upcoming session where Nithish booked Arun for ML
+        if nithish_id and arun_id:
+            date0d = (today + timedelta(days=3)).strftime("%Y-%m-%d")
+            s, m, req0d = create_session_request(
+                listing_id=None,
+                learner_id=nithish_id,
+                tutor_id=arun_id,
+                mode="ONLINE",
+                session_date=date0d,
+                session_time="15:00",
+                notes="Understanding fine-tuning techniques for transformer models.",
+                price=200.0,
+            )
+            if s and req0d:
+                update_request_status(
+                    req0d, arun_id, STATUS_ACCEPTED,
+                    tutor_note="Accepted! See you on Google Meet.",
+                    meet_link="[DEMO MODE] https://meet.google.com/sec-arn-ml",
+                    is_demo_link=True,
+                )
 
         if kavya_id and rahul_id:
             # Session 1: Completed Online session
@@ -474,6 +597,7 @@ def seed_sample_data(reset_existing: bool = False) -> None:
         q_count = cur.fetchone()["count"]
 
     if q_count == 0 or reset_existing:
+        nithish_id = user_ids.get("nithish.cse@sece.ac.in") or user_ids.get("nithishg333@gmail.com")
         rahul_id = user_ids.get("rahul.eee@sece.ac.in")
         kavya_id = user_ids.get("kavya.cse@sece.ac.in")
         dinesh_id = user_ids.get("dinesh.it@sece.ac.in")
@@ -481,6 +605,21 @@ def seed_sample_data(reset_existing: bool = False) -> None:
         priyanka_id = user_ids.get("priyanka.ece@sece.ac.in")
         ananya_id = user_ids.get("ananya.civil@sece.ac.in")
         harish_id = user_ids.get("harish.cse@sece.ac.in")
+
+        if rahul_id and nithish_id:
+            s, m, q0 = create_async_question(
+                learner_id=rahul_id,
+                subject="Web Development (HTML/CSS/JS/React)",
+                title="How to manage persistent state across re-renders in Streamlit?",
+                question_text="Every time a button or widget is clicked in Streamlit, the entire script re-runs from top to bottom. How can I preserve user input or database cache across multiple interactions?",
+                code_snippet="# How to keep count incrementing?\ncount = 0\nif st.button('Click'):\n    count += 1\nst.write(count)",
+            )
+            if s and q0:
+                create_async_answer(
+                    question_id=q0,
+                    tutor_id=nithish_id,
+                    answer_text="Use `st.session_state`! It is Streamlit's built-in session cache that persists across script re-runs for the same user:\n\n```python\nif 'count' not in st.session_state:\n    st.session_state.count = 0\n\nif st.button('Click'):\n    st.session_state.count += 1\n\nst.write(st.session_state.count)\n```",
+                )
 
         if rahul_id and kavya_id:
             s, m, q1 = create_async_question(
