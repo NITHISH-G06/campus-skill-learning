@@ -5,6 +5,7 @@ Main Application Entrance & Page Router
 
 import streamlit as st
 from database import init_db
+from seed_data import seed_sample_data
 from components.ui_helpers import (
     init_session_state,
     get_current_user,
@@ -30,8 +31,9 @@ st.set_page_config(
 )
 
 def main():
-    # 1. Initialize Database Schema and Session
+    # 1. Initialize Database Schema, Seed Default Records, and Session
     init_db()
+    seed_sample_data(reset_existing=False)
     init_session_state()
 
     # 2. Render subtle interactive connected nodes background
